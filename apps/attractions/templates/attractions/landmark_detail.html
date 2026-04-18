@@ -1,0 +1,139 @@
+{% extends 'attractions/base.html' %}
+{% load static %}
+
+{% block title %}{{ landmark.name }} — {{ ui.landmark_page_title }}{% endblock %}
+
+{% block content %}
+  <div class="min-h-screen landmark-page">
+    <section class="landmark-hero">
+      <div class="landmark-hero-overlay"></div>
+      <div class="container landmark-hero-grid">
+        <div class="landmark-hero-copy">
+          <a href="{% url 'attractions:region_detail' region.id %}?lang={{ lang }}" class="ghost-link">
+            {{ ui.back_to_map }}
+          </a>
+
+          <span class="section-pill">{{ ui.region_label }}: {{ landmark.region_name }}</span>
+          <h1 class="landmark-title">{{ landmark.name }}</h1>
+          <p class="landmark-intro">{{ landmark.description }}</p>
+
+          <div class="landmark-stats">
+            <div class="landmark-stat-card">
+              <span class="landmark-stat-label">{{ ui.average_rating }}</span>
+              <strong class="landmark-stat-value">
+                {% if landmark.review_count %}
+                  {{ landmark.average_rating|floatformat:1 }}/5
+                {% else %}
+                  -
+                {% endif %}
+              </strong>
+            </div>
+            <div class="landmark-stat-card">
+              <span class="landmark-stat-label">{{ ui.reviews_section_title }}</span>
+              <strong class="landmark-stat-value">{{ landmark.review_count }} {{ landmark.review_word }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="landmark-media-wrap">
+          {% if landmark.has_image %}
+            <img src="{% static 'attractions/images/' %}{{ landmark.image }}" alt="{{ landmark.name }}" class="landmark-media">
+          {% else %}
+            <div class="landmark-media landmark-media-placeholder">
+              <span>{{ landmark.name|slice:":1" }}</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <section class="container landmark-content-grid">
+      <div class="landmark-review-panel" id="review-form">
+        <div class="panel-header">
+          <h2>{{ ui.landmark_page_title }}</h2>
+          <p>{{ ui.landmark_page_subtitle }}</p>
+        </div>
+
+        {% if user.is_authenticated %}
+          <form method="post" class="review-form">
+            {% csrf_token %}
+
+            <div class="form-group">
+              <label class="form-label">{{ ui.your_rating }}</label>
+              <div class="rating-grid">
+                {% for rating in rating_options %}
+                  <label class="rating-choice">
+                    <input type="radio" name="rating" value="{{ rating }}" {% if selected_rating == rating %}checked{% endif %}>
+                    <span>{{ rating }}</span>
+                  </label>
+                {% endfor %}
+              </div>
+              {% if review_form.rating.errors %}
+                <div class="form-error">{{ review_form.rating.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ review_form.comment.id_for_label }}" class="form-label">{{ ui.comment }}</label>
+              {{ review_form.comment }}
+              {% if review_form.comment.errors %}
+                <div class="form-error">{{ review_form.comment.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            {% if review_form.non_field_errors %}
+              <div class="form-error">{{ review_form.non_field_errors.0 }}</div>
+            {% endif %}
+
+            <div class="card-actions">
+              <button type="submit" class="cta-button cta-button-primary">
+                {% if user_has_review %}{{ ui.update_review }}{% else %}{{ ui.submit_review }}{% endif %}
+              </button>
+              <a href="{% url 'attractions:region_detail' region.id %}?lang={{ lang }}" class="cta-button cta-button-secondary">{{ ui.cancel }}</a>
+            </div>
+          </form>
+        {% else %}
+          <div class="auth-review-lock">
+            <h3>{{ ui.login_to_continue }}</h3>
+            <p>{{ ui.login_to_add_review }}</p>
+            <div class="card-actions">
+              <a href="{{ login_to_review_url }}" class="cta-button cta-button-primary">{{ ui.login }}</a>
+              <a href="{{ register_to_review_url }}" class="cta-button cta-button-secondary">{{ ui.register_now }}</a>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="landmark-review-panel">
+        <div class="panel-header">
+          <h2>{{ ui.reviews_section_title }}</h2>
+          <p>{{ landmark.review_count }} {{ landmark.review_word }}</p>
+        </div>
+
+        {% if reviews %}
+          <div class="full-review-list">
+            {% for review in reviews %}
+              <article class="full-review-card">
+                <div class="review-preview-head">
+                  <div>
+                    <strong class="text-white">{{ review.user }}</strong>
+                    <div class="text-sm text-white/60">{{ review.created_at|date:"d.m.Y H:i" }}</div>
+                  </div>
+                  <span class="review-badge">{{ review.rating }}/5</span>
+                </div>
+                {% if review.comment %}
+                  <p class="full-review-text">{{ review.comment }}</p>
+                {% endif %}
+              </article>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="review-empty-state review-empty-large">
+            <div class="text-sm font-medium text-white/80">{{ ui.no_reviews }}</div>
+            <div class="text-sm text-white/60">{{ ui.be_first_review }}</div>
+          </div>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+{% endblock %}

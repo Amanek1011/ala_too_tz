@@ -1,0 +1,66 @@
+{% extends 'attractions/base.html' %}
+
+{% block title %}{{ ui.register_page_title }} — {{ ui.site_title }}{% endblock %}
+
+{% block content %}
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="panel-header auth-panel-header">
+        <span class="section-pill">{{ ui.register }}</span>
+        <h1>{{ ui.register_page_title }}</h1>
+        <p>{{ ui.register_page_subtitle }}</p>
+      </div>
+
+      <form method="post" class="review-form">
+        {% csrf_token %}
+        <input type="hidden" name="lang" value="{{ lang }}">
+        {% if next_url %}
+          <input type="hidden" name="next" value="{{ next_url }}">
+        {% endif %}
+
+        <div class="form-group">
+          <label for="{{ form.username.id_for_label }}" class="form-label">{{ ui.username }}</label>
+          {{ form.username }}
+          {% if form.username.errors %}
+            <div class="form-error">{{ form.username.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.email.id_for_label }}" class="form-label">{{ ui.email }}</label>
+          {{ form.email }}
+          {% if form.email.errors %}
+            <div class="form-error">{{ form.email.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.password1.id_for_label }}" class="form-label">{{ ui.password }}</label>
+          {{ form.password1 }}
+          {% if form.password1.errors %}
+            <div class="form-error">{{ form.password1.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.password2.id_for_label }}" class="form-label">{{ ui.confirm_password }}</label>
+          {{ form.password2 }}
+          {% if form.password2.errors %}
+            <div class="form-error">{{ form.password2.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        {% if form.non_field_errors %}
+          <div class="form-error">{{ form.non_field_errors.0 }}</div>
+        {% endif %}
+
+        <button type="submit" class="cta-button cta-button-primary cta-full">{{ ui.create_account }}</button>
+      </form>
+
+      <p class="auth-footer-text">
+        {{ ui.already_have_account }}
+        <a href="{% url 'attractions:login' %}?lang={{ lang }}{% if next_url %}&next={{ next_url|urlencode }}{% endif %}">{{ ui.login }}</a>
+      </p>
+    </div>
+  </div>
+{% endblock %}

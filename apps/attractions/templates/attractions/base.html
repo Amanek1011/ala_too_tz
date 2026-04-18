@@ -1,18 +1,60 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ lang|default:'ru' }}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}Достопримечательности Кыргызстана{% endblock %}</title>
+    <title>{% block title %}{{ ui.site_title }}{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'attractions/styles.css' %}" />
   </head>
   <body>
-    <div class="page-shell">
+    <header class="header">
+      <div class="container header-content">
+        <a href="{% url 'attractions:home' %}?lang={{ lang }}" class="site-title">{{ ui.site_title }}</a>
+
+        <nav class="nav-cluster">
+          <div class="language-selector">
+            {% for language_link in language_links %}
+              <a
+                href="{{ language_link.url }}"
+                class="chip-link {% if language_link.active %}active{% endif %}"
+              >
+                {{ language_link.label }}
+              </a>
+            {% endfor %}
+          </div>
+
+          <div class="auth-links">
+            {% if user.is_authenticated %}
+              <span class="user-pill">{{ user_greeting }}</span>
+              <form method="post" action="{% url 'attractions:logout' %}?lang={{ lang }}" class="inline-form">
+                {% csrf_token %}
+                <button type="submit" class="auth-button auth-button-secondary">{{ ui.logout }}</button>
+              </form>
+            {% else %}
+              <a href="{% url 'attractions:login' %}?lang={{ lang }}" class="auth-button auth-button-secondary">{{ ui.login }}</a>
+              <a href="{% url 'attractions:register' %}?lang={{ lang }}" class="auth-button auth-button-primary">{{ ui.register }}</a>
+            {% endif %}
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    {% if messages %}
+      <div class="container messages">
+        {% for message in messages %}
+          <div class="message message-{{ message.tags|default:'info' }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <main class="page-shell">
       {% block content %}{% endblock %}
-    </div>
+    </main>
   </body>
 </html>
