@@ -1,0 +1,111 @@
+{% extends 'attractions/base.html' %}
+
+{% block title %}{{ ui.route_page_title }}{% endblock %}
+
+{% block content %}
+  <section class="route-page">
+    <div class="container route-builder-shell">
+      <div class="route-builder-hero">
+        <span class="section-pill">{{ ui.route_form_title }}</span>
+        <h1 class="experience-title">{{ ui.route_page_title }}</h1>
+        <p class="experience-subtitle">{{ ui.route_page_subtitle }}</p>
+      </div>
+
+      <div class="route-builder-grid">
+        <form method="post" class="route-form-card">
+          {% csrf_token %}
+          <input type="hidden" name="lang" value="{{ lang }}">
+
+          <div class="panel-header">
+            <h2>{{ ui.route_form_title }}</h2>
+            <p>{{ ui.route_form_hint }}</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="{{ form.age.id_for_label }}">{{ form.age.label }}</label>
+            {{ form.age }}
+            {% for error in form.age.errors %}
+              <p class="form-error">{{ error }}</p>
+            {% endfor %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ form.interests.label }}</label>
+            <div class="interest-grid">
+              {% for checkbox in form.interests %}
+                <label class="interest-card">
+                  {{ checkbox.tag }}
+                  <span>{{ checkbox.choice_label }}</span>
+                </label>
+              {% endfor %}
+            </div>
+            {% for error in form.interests.errors %}
+              <p class="form-error">{{ error }}</p>
+            {% endfor %}
+          </div>
+
+          <div class="route-form-split">
+            <div class="form-group">
+              <label class="form-label" for="{{ form.duration_hours.id_for_label }}">{{ form.duration_hours.label }}</label>
+              {{ form.duration_hours }}
+              {% for error in form.duration_hours.errors %}
+                <p class="form-error">{{ error }}</p>
+              {% endfor %}
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="{{ form.physical_activity.id_for_label }}">{{ form.physical_activity.label }}</label>
+              {{ form.physical_activity }}
+              {% for error in form.physical_activity.errors %}
+                <p class="form-error">{{ error }}</p>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="switch-stack">
+            <label class="switch-row">
+              <span>
+                <strong>{{ form.accessibility_required.label }}</strong>
+                <small>{{ ui.map_filter_accessible }}</small>
+              </span>
+              {{ form.accessibility_required }}
+            </label>
+
+            <label class="switch-row">
+              <span>
+                <strong>{{ form.with_children.label }}</strong>
+                <small>{{ ui.route_family_label }}</small>
+              </span>
+              {{ form.with_children }}
+            </label>
+          </div>
+
+          <button type="submit" class="cta-button cta-button-primary cta-full">{{ ui.route_submit }}</button>
+        </form>
+
+        <aside class="route-side-card">
+          <div class="route-side-block">
+            <span class="section-pill">{{ ui.route_profile_title }}</span>
+            <h2>{{ ui.route_page_title }}</h2>
+            <p>{{ ui.route_form_hint }}</p>
+          </div>
+
+          <div class="audience-grid">
+            <article class="audience-card">
+              <h3>{{ ui.route_family_label }}</h3>
+              <p>{{ ui.route_interest_culture }}, {{ ui.route_interest_city }} и умеренный темп для семейных прогулок.</p>
+            </article>
+            <article class="audience-card">
+              <h3>{{ ui.route_accessibility_label }}</h3>
+              <p>{{ ui.map_filter_accessible }} объекты получают приоритет, если нужна удобная среда.</p>
+            </article>
+            <article class="audience-card">
+              <h3>{{ ui.route_activity_label }}</h3>
+              <p>{{ ui.route_activity_low }}, {{ ui.route_activity_medium }} и {{ ui.route_activity_high }} переключают физическую нагрузку.</p>
+            </article>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+{% endblock %}

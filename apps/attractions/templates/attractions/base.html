@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
     <link rel="stylesheet" href="{% static 'attractions/styles.css' %}" />
   </head>
   <body>
@@ -16,6 +17,10 @@
         <a href="{% url 'attractions:home' %}?lang={{ lang }}" class="site-title">{{ ui.site_title }}</a>
 
         <nav class="nav-cluster">
+          <div class="nav-links">
+            <a href="{% url 'attractions:interactive_map' %}?lang={{ lang }}" class="nav-link">{{ ui.nav_map }}</a>
+            <a href="{% url 'attractions:generate_route' %}?lang={{ lang }}" class="nav-link">{{ ui.nav_routes }}</a>
+          </div>
           <div class="language-selector">
             {% for language_link in language_links %}
               <a
@@ -56,5 +61,6 @@
     <main class="page-shell">
       {% block content %}{% endblock %}
     </main>
+    {% block extra_scripts %}{% endblock %}
   </body>
 </html>

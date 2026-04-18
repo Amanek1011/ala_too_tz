@@ -26,11 +26,11 @@ regions_data = {
             'ал эми түшүмдүү Чүй өрөөнү Кыргыз Ала-Тоо кыркасынын этегин бойлой созулуп жатат.'
         ),
         'landmarks': [
-            {'name': 'Ala-Archa National Park', 'name_en': 'Ala-Archa National Park', 'name_ru': 'Ала-Арча национальный парк', 'name_ky': 'Ала-Арча улуттук паркы', 'image': 'ala_archa.jpg', 'reviews': [{'user': 'John Doe', 'rating': 5, 'comment': 'Beautiful hiking trails!'}]},
-            {'name': 'Burana Tower (ancient minaret)', 'name_en': 'Burana Tower (ancient minaret)', 'name_ru': 'Бурана башня (древний минарет)', 'name_ky': 'Бурана мунарасы (байыркы минарет)', 'image': 'burana_tower.jpg', 'reviews': []},
-            {'name': 'Chuy Valley vineyards', 'name_en': 'Chuy Valley vineyards', 'name_ru': 'Виноградники Чуйской долины', 'name_ky': 'Чүй өрөөнүнүн жүзүмзарлары', 'image': 'chuy_vineyards.jpg', 'reviews': []},
-            {'name': 'Tokmok city', 'name_en': 'Tokmok city', 'name_ru': 'Город Токмок', 'name_ky': 'Токмок шаары', 'image': 'tokmok.jpg', 'reviews': []},
-            {'name': 'Shabyrt waterfall', 'name_en': 'Shabyrt waterfall', 'name_ru': 'Водопад Шабырт', 'name_ky': 'Шабырт шаркырама', 'image': 'shabyrt_waterfall.jpg', 'reviews': []},
+            {'name': 'Ala-Archa National Park', 'name_en': 'Ala-Archa National Park', 'name_ru': 'Ала-Арча национальный парк', 'name_ky': 'Ала-Арча улуттук паркы', 'image': 'ala_archa.jpg', 'lat': 42.57, 'lng': 74.48, 'reviews': [{'user': 'John Doe', 'rating': 5, 'comment': 'Beautiful hiking trails!'}]},
+            {'name': 'Burana Tower (ancient minaret)', 'name_en': 'Burana Tower (ancient minaret)', 'name_ru': 'Бурана башня (древний минарет)', 'name_ky': 'Бурана мунарасы (байыркы минарет)', 'image': 'burana_tower.jpg', 'lat': 42.78, 'lng': 75.28, 'reviews': []},
+            {'name': 'Chuy Valley vineyards', 'name_en': 'Chuy Valley vineyards', 'name_ru': 'Виноградники Чуйской долины', 'name_ky': 'Чүй өрөөнүнүн жүзүмзарлары', 'image': 'chuy_vineyards.jpg', 'lat': 42.87, 'lng': 74.59, 'reviews': []},
+            {'name': 'Tokmok city', 'name_en': 'Tokmok city', 'name_ru': 'Город Токмок', 'name_ky': 'Токмок шаары', 'image': 'tokmok.jpg', 'lat': 42.84, 'lng': 75.29, 'reviews': []},
+            {'name': 'Shabyrt waterfall', 'name_en': 'Shabyrt waterfall', 'name_ru': 'Водопад Шабырт', 'name_ky': 'Шабырт шаркырама', 'image': 'shabyrt_waterfall.jpg', 'lat': 42.62, 'lng': 74.55, 'reviews': []},
         ],
         'color': '#0ea5e9',
         'path': 'M 400 150 C 450 140, 520 160, 580 150 C 600 170, 590 200, 560 210 C 500 230, 420 220, 380 200 C 370 170, 380 160, 400 150 Z',

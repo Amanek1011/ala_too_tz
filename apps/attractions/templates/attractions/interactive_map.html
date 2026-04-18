@@ -1,0 +1,531 @@
+{% extends 'attractions/base.html' %}
+
+{% block title %}{{ ui.map_page_title }}{% endblock %}
+
+{% block extra_head %}
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+{% endblock %}
+
+{% block content %}
+  <section class="experience-page">
+    <div class="container experience-shell">
+      <div class="experience-hero">
+        <div class="experience-copy">
+          <span class="section-pill">{{ ui.map_live_badge }}</span>
+          <h1 class="experience-title">{{ ui.map_page_title }}</h1>
+          <p class="experience-subtitle">{{ ui.map_page_subtitle }}</p>
+        </div>
+        <div class="experience-actions">
+          <div class="filter-row" id="map-filters">
+            {% for filter in map_filters %}
+              <button
+                type="button"
+                class="filter-chip {% if forloop.first %}active{% endif %}"
+                data-filter="{{ filter.value }}"
+              >
+                {{ filter.label }}
+              </button>
+            {% endfor %}
+          </div>
+          <button type="button" id="launch-ar-global" class="cta-button cta-button-primary">
+            {{ ui.map_open_ar }}
+          </button>
+        </div>
+      </div>
+
+      <div class="map-layout">
+        <div class="map-stage-card">
+          <div id="interactive-map" class="leaflet-stage"></div>
+          <div class="map-stage-footer">
+            <p>{{ ui.map_select_hint }}</p>
+            <p>{{ ui.map_mobile_hint }}</p>
+            {% if has_approximate_points %}
+              <p>{{ ui.map_approximate_hint }}</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <aside class="map-sidebar">
+          <div id="selected-landmark-card" class="selected-landmark-card"></div>
+          <div class="map-list-card">
+            <div class="panel-header">
+              <h2>{{ ui.map_list_title }}</h2>
+              <p>{{ ui.map_select_hint }}</p>
+            </div>
+            <div id="landmark-list" class="landmark-list"></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <div id="ar-modal" class="ar-modal hidden" aria-hidden="true">
+    <div class="ar-backdrop" data-close-ar></div>
+    <div class="ar-dialog">
+      <div class="ar-dialog-header">
+        <div class="ar-dialog-copy">
+          <span class="section-pill">{{ ui.map_ar_modal_title }}</span>
+          <h2 id="ar-landmark-title">AR</h2>
+          <p id="ar-status-text">{{ ui.map_ar_status_idle }}</p>
+        </div>
+        <button type="button" class="ghost-link" data-close-ar>{{ ui.map_ar_modal_close }}</button>
+      </div>
+
+      <div class="ar-dialog-body">
+        <div class="ar-stage-shell">
+          <canvas id="xr-canvas" class="xr-canvas hidden"></canvas>
+          <video id="ar-camera-feed" class="ar-camera-feed hidden" playsinline autoplay muted></video>
+          <div id="ar-demo-surface" class="ar-demo-surface hidden"></div>
+          <div id="ar-overlay-grid" class="ar-overlay-grid"></div>
+        </div>
+
+        <div class="ar-sidebar">
+          <p class="ar-sidebar-copy">{{ ui.map_ar_instructions }}</p>
+          <div id="ar-scene-list" class="ar-scene-list"></div>
+          <a id="ar-detail-link" href="#" class="ghost-link">{{ ui.map_open_details }}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{ landmarks|json_script:"map-landmarks-data" }}
+{% endblock %}
+
+{% block extra_scripts %}
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const landmarks = JSON.parse(document.getElementById("map-landmarks-data").textContent);
+      const map = L.map("interactive-map", { scrollWheelZoom: true }).setView([41.2, 74.7], 7);
+      const markerLayer = L.layerGroup().addTo(map);
+      const listContainer = document.getElementById("landmark-list");
+      const selectedCard = document.getElementById("selected-landmark-card");
+      const filterContainer = document.getElementById("map-filters");
+      const launchArButton = document.getElementById("launch-ar-global");
+      const arModal = document.getElementById("ar-modal");
+      const arStatusText = document.getElementById("ar-status-text");
+      const arLandmarkTitle = document.getElementById("ar-landmark-title");
+      const arSceneList = document.getElementById("ar-scene-list");
+      const arOverlayGrid = document.getElementById("ar-overlay-grid");
+      const arDetailLink = document.getElementById("ar-detail-link");
+      const arCameraFeed = document.getElementById("ar-camera-feed");
+      const arDemoSurface = document.getElementById("ar-demo-surface");
+      const xrCanvas = document.getElementById("xr-canvas");
+
+      const categoryColors = {
+        history: "#f59e0b",
+        nature: "#10b981",
+        culture: "#06b6d4",
+        adventure: "#fb7185",
+        wellness: "#8b5cf6",
+        city: "#94a3b8",
+      };
+
+      const uiTexts = {
+        region: "{{ ui.map_region_label|escapejs }}",
+        accessibility: "{{ ui.map_accessibility_label|escapejs }}",
+        activity: "{{ ui.map_activity_label|escapejs }}",
+        duration: "{{ ui.map_duration_label|escapejs }}",
+        arMarkers: "{{ ui.map_ar_markers_label|escapejs }}",
+        openDetails: "{{ ui.map_open_details|escapejs }}",
+        openAr: "{{ ui.map_open_ar|escapejs }}",
+        empty: "{{ ui.map_empty_state|escapejs }}",
+        statusWebxr: "{{ ui.map_ar_status_webxr|escapejs }}",
+        statusCamera: "{{ ui.map_ar_status_camera|escapejs }}",
+        statusError: "{{ ui.map_ar_status_error|escapejs }}",
+        statusIdle: "{{ ui.map_ar_status_idle|escapejs }}",
+      };
+
+      let activeFilter = "all";
+      let activeLandmarkId = landmarks.length ? landmarks[0].id : null;
+      let markerIndex = new Map();
+      let xrSession = null;
+      let xrGl = null;
+      let xrRefSpace = null;
+      let cameraStream = null;
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors",
+      }).addTo(map);
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function passesFilter(landmark) {
+        if (activeFilter === "all") {
+          return true;
+        }
+        if (activeFilter === "accessible") {
+          return landmark.accessibility_level !== "limited";
+        }
+        return landmark.category === activeFilter;
+      }
+
+      function filteredLandmarks() {
+        return landmarks.filter(passesFilter);
+      }
+
+      function setMarkerStyles() {
+        markerIndex.forEach((marker, landmarkId) => {
+          const landmark = landmarks.find((item) => item.id === landmarkId);
+          if (!landmark) {
+            return;
+          }
+          const selected = landmarkId === activeLandmarkId;
+          marker.setStyle({
+            radius: selected ? 11 : 8,
+            color: "#ffffff",
+            weight: selected ? 2 : 1,
+            fillColor: categoryColors[landmark.category] || "#38bdf8",
+            fillOpacity: selected ? 1 : 0.85,
+          });
+        });
+      }
+
+      function renderSelectedCard(landmark) {
+        if (!landmark) {
+          selectedCard.innerHTML = `<div class="empty-card">${escapeHtml(uiTexts.empty)}</div>`;
+          return;
+        }
+
+        const markerTags = landmark.ar_markers
+          .map((marker) => `<span class="marker-pill">${escapeHtml(marker.marker_type_label)}</span>`)
+          .join("");
+        const imageBlock = landmark.has_image
+          ? `<img src="${escapeHtml(landmark.image_url)}" alt="${escapeHtml(landmark.name)}" class="detail-card-image">`
+          : `<div class="detail-card-image detail-card-placeholder"><span>${escapeHtml(landmark.name.slice(0, 1))}</span></div>`;
+
+        selectedCard.innerHTML = `
+          <article class="detail-card">
+            ${imageBlock}
+            <div class="detail-card-body">
+              <div class="detail-card-head">
+                <div>
+                  <span class="section-pill">${escapeHtml(landmark.category_label)}</span>
+                  <h2>${escapeHtml(landmark.name)}</h2>
+                </div>
+              </div>
+              <p class="landmark-description">${escapeHtml(landmark.description)}</p>
+              <dl class="detail-stat-grid">
+                <div>
+                  <dt>${escapeHtml(uiTexts.region)}</dt>
+                  <dd>${escapeHtml(landmark.region_name)}</dd>
+                </div>
+                <div>
+                  <dt>${escapeHtml(uiTexts.accessibility)}</dt>
+                  <dd>${escapeHtml(landmark.accessibility_label)}</dd>
+                </div>
+                <div>
+                  <dt>${escapeHtml(uiTexts.activity)}</dt>
+                  <dd>${escapeHtml(landmark.physical_label)}</dd>
+                </div>
+                <div>
+                  <dt>${escapeHtml(uiTexts.duration)}</dt>
+                  <dd>${escapeHtml(String(landmark.recommended_visit_hours))}h</dd>
+                </div>
+              </dl>
+              <div class="marker-pill-row">
+                <span class="marker-pill marker-pill-highlight">${escapeHtml(uiTexts.arMarkers)}: ${escapeHtml(String(landmark.ar_markers.length))}</span>
+                ${markerTags}
+              </div>
+              <div class="card-actions">
+                <a href="${escapeHtml(landmark.detail_url)}" class="ghost-link">${escapeHtml(uiTexts.openDetails)}</a>
+                <button type="button" class="cta-button cta-button-primary" data-ar-id="${landmark.id}">${escapeHtml(uiTexts.openAr)}</button>
+              </div>
+            </div>
+          </article>
+        `;
+      }
+
+      function renderList(items) {
+        if (!items.length) {
+          listContainer.innerHTML = `<div class="empty-card">${escapeHtml(uiTexts.empty)}</div>`;
+          return;
+        }
+
+        listContainer.innerHTML = items
+          .map((landmark) => {
+            const isActive = landmark.id === activeLandmarkId;
+            return `
+              <button type="button" class="landmark-list-item ${isActive ? "active" : ""}" data-select-id="${landmark.id}">
+                <span class="landmark-list-top">
+                  <span class="landmark-list-title">${escapeHtml(landmark.name)}</span>
+                  <span class="landmark-list-badge">${escapeHtml(landmark.category_label)}</span>
+                </span>
+                <span class="landmark-list-subtitle">${escapeHtml(landmark.region_name)} · ${escapeHtml(landmark.accessibility_label)}</span>
+              </button>
+            `;
+          })
+          .join("");
+      }
+
+      function redrawMarkers() {
+        markerLayer.clearLayers();
+        markerIndex = new Map();
+        const items = filteredLandmarks();
+        const bounds = [];
+
+        items.forEach((landmark) => {
+          const marker = L.circleMarker([landmark.lat, landmark.lng], {
+            radius: 8,
+            color: "#ffffff",
+            weight: 1,
+            fillColor: categoryColors[landmark.category] || "#38bdf8",
+            fillOpacity: 0.85,
+          })
+            .addTo(markerLayer)
+            .bindPopup(`<strong>${escapeHtml(landmark.name)}</strong><br>${escapeHtml(landmark.region_name)}`);
+
+          marker.on("click", () => selectLandmark(landmark.id, false));
+          markerIndex.set(landmark.id, marker);
+          bounds.push([landmark.lat, landmark.lng]);
+        });
+
+        if (!items.find((item) => item.id === activeLandmarkId)) {
+          activeLandmarkId = items.length ? items[0].id : null;
+        }
+
+        renderList(items);
+        renderSelectedCard(items.find((item) => item.id === activeLandmarkId));
+        setMarkerStyles();
+
+        if (bounds.length) {
+          map.fitBounds(bounds, { padding: [36, 36], maxZoom: 8 });
+        }
+      }
+
+      function selectLandmark(landmarkId, preserveView = true) {
+        activeLandmarkId = landmarkId;
+        const landmark = filteredLandmarks().find((item) => item.id === landmarkId);
+        renderList(filteredLandmarks());
+        renderSelectedCard(landmark);
+        setMarkerStyles();
+
+        if (landmark && markerIndex.has(landmark.id)) {
+          const marker = markerIndex.get(landmark.id);
+          marker.openPopup();
+          if (!preserveView) {
+            map.flyTo([landmark.lat, landmark.lng], Math.max(map.getZoom(), 8), { duration: 0.6 });
+          }
+        }
+      }
+
+      function renderArScenes(landmark) {
+        const sceneCards = landmark.ar_markers
+          .map(
+            (marker) => `
+              <article class="ar-scene-card">
+                <span class="section-pill">${escapeHtml(marker.marker_type_label)}</span>
+                <h3>${escapeHtml(marker.title)}</h3>
+                <p>${escapeHtml(marker.description)}</p>
+                <span class="scene-distance">${escapeHtml(String(marker.distance_meters))}m</span>
+              </article>
+            `
+          )
+          .join("");
+
+        arSceneList.innerHTML = sceneCards;
+        arOverlayGrid.innerHTML = sceneCards;
+      }
+
+      function stopCameraFallback() {
+        if (cameraStream) {
+          cameraStream.getTracks().forEach((track) => track.stop());
+          cameraStream = null;
+        }
+        arCameraFeed.srcObject = null;
+        arCameraFeed.classList.add("hidden");
+      }
+
+      async function stopWebXR() {
+        if (xrSession) {
+          const session = xrSession;
+          xrSession = null;
+          await session.end();
+        }
+        xrCanvas.classList.add("hidden");
+      }
+
+      async function startWebXR() {
+        if (!navigator.xr || typeof navigator.xr.isSessionSupported !== "function" || typeof XRWebGLLayer === "undefined") {
+          return false;
+        }
+
+        const supported = await navigator.xr.isSessionSupported("immersive-ar");
+        if (!supported) {
+          return false;
+        }
+
+        xrGl = xrCanvas.getContext("webgl", { alpha: true, xrCompatible: true });
+        if (!xrGl) {
+          return false;
+        }
+
+        await xrGl.makeXRCompatible();
+        xrSession = await navigator.xr.requestSession("immersive-ar", {
+          optionalFeatures: ["local-floor", "dom-overlay"],
+          domOverlay: { root: arModal },
+        });
+
+        xrSession.addEventListener("end", () => {
+          xrSession = null;
+          xrCanvas.classList.add("hidden");
+        });
+
+        xrSession.updateRenderState({
+          baseLayer: new XRWebGLLayer(xrSession, xrGl),
+        });
+        xrRefSpace = await xrSession.requestReferenceSpace("local");
+        xrCanvas.classList.remove("hidden");
+
+        function onXRFrame(time, frame) {
+          if (!xrSession) {
+            return;
+          }
+          const session = frame.session;
+          session.requestAnimationFrame(onXRFrame);
+          const pose = frame.getViewerPose(xrRefSpace);
+          xrGl.bindFramebuffer(xrGl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
+          xrGl.clearColor(0, 0, 0, pose ? 0 : 0.01);
+          xrGl.clear(xrGl.COLOR_BUFFER_BIT | xrGl.DEPTH_BUFFER_BIT);
+        }
+
+        xrSession.requestAnimationFrame(onXRFrame);
+        arStatusText.textContent = uiTexts.statusWebxr;
+        return true;
+      }
+
+      async function startCameraFallback() {
+        if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
+          return false;
+        }
+
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+          audio: false,
+        });
+        arCameraFeed.srcObject = cameraStream;
+        arCameraFeed.classList.remove("hidden");
+        arStatusText.textContent = uiTexts.statusCamera;
+        return true;
+      }
+
+      function showDemoSurface() {
+        arDemoSurface.classList.remove("hidden");
+        arDemoSurface.innerHTML = `
+          <div class="demo-surface-copy">
+            <span class="section-pill">AR Demo</span>
+            <p>${escapeHtml(uiTexts.statusError)}</p>
+          </div>
+        `;
+      }
+
+      async function openArForLandmark(landmarkId) {
+        const landmark = landmarks.find((item) => item.id === landmarkId);
+        if (!landmark) {
+          return;
+        }
+
+        await stopWebXR();
+        stopCameraFallback();
+        arDemoSurface.classList.add("hidden");
+        arDemoSurface.innerHTML = "";
+
+        arLandmarkTitle.textContent = landmark.name;
+        arDetailLink.href = landmark.detail_url;
+        arStatusText.textContent = uiTexts.statusIdle;
+        renderArScenes(landmark);
+
+        arModal.classList.remove("hidden");
+        arModal.setAttribute("aria-hidden", "false");
+
+        try {
+          const launchedWebXR = await startWebXR();
+          if (!launchedWebXR) {
+            const launchedCamera = await startCameraFallback();
+            if (!launchedCamera) {
+              showDemoSurface();
+              arStatusText.textContent = uiTexts.statusError;
+            }
+          }
+        } catch (error) {
+          showDemoSurface();
+          arStatusText.textContent = uiTexts.statusError;
+        }
+      }
+
+      async function closeArModal() {
+        await stopWebXR();
+        stopCameraFallback();
+        arDemoSurface.classList.add("hidden");
+        arDemoSurface.innerHTML = "";
+        arModal.classList.add("hidden");
+        arModal.setAttribute("aria-hidden", "true");
+      }
+
+      filterContainer.addEventListener("click", (event) => {
+        const target = event.target.closest("[data-filter]");
+        if (!target) {
+          return;
+        }
+        activeFilter = target.dataset.filter;
+        filterContainer.querySelectorAll("[data-filter]").forEach((button) => {
+          button.classList.toggle("active", button === target);
+        });
+        redrawMarkers();
+      });
+
+      listContainer.addEventListener("click", (event) => {
+        const target = event.target.closest("[data-select-id]");
+        if (!target) {
+          return;
+        }
+        selectLandmark(Number(target.dataset.selectId), false);
+      });
+
+      selectedCard.addEventListener("click", (event) => {
+        const target = event.target.closest("[data-ar-id]");
+        if (!target) {
+          return;
+        }
+        openArForLandmark(Number(target.dataset.arId));
+      });
+
+      launchArButton.addEventListener("click", () => {
+        const landmark = filteredLandmarks().find((item) => item.id === activeLandmarkId) || filteredLandmarks()[0];
+        if (landmark) {
+          openArForLandmark(landmark.id);
+        }
+      });
+
+      arModal.addEventListener("click", (event) => {
+        if (event.target.closest("[data-close-ar]")) {
+          closeArModal();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !arModal.classList.contains("hidden")) {
+          closeArModal();
+        }
+      });
+
+      redrawMarkers();
+    });
+  </script>
+{% endblock %}

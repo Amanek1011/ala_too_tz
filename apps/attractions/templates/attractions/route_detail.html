@@ -1,0 +1,169 @@
+{% extends 'attractions/base.html' %}
+
+{% block title %}{{ route_plan.title }}{% endblock %}
+
+{% block extra_head %}
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+{% endblock %}
+
+{% block content %}
+  <section class="route-result-page">
+    <div class="container route-result-shell">
+      <div class="route-result-hero">
+        <article class="route-summary-card">
+          <span class="section-pill">{{ ui.route_result_title }}</span>
+          <h1 class="experience-title">{{ route_plan.title }}</h1>
+          <p class="experience-subtitle">{{ route_plan.summary }}</p>
+
+          <div class="route-meta-grid">
+            <div class="route-meta-item">
+              <span>{{ ui.route_profile_title }}</span>
+              <strong>{{ route_plan.profile_summary }}</strong>
+            </div>
+            <div class="route-meta-item">
+              <span>{{ ui.route_summary_title }}</span>
+              <strong>{{ route_plan.difficulty_label }} · {{ route_plan.total_hours }}h</strong>
+            </div>
+            <div class="route-meta-item">
+              <span>{{ ui.map_region_label }}</span>
+              <strong>{{ route_plan.selected_regions|join:", " }}</strong>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <a href="{% url 'attractions:generate_route' %}?lang={{ lang }}" class="ghost-link">{{ ui.nav_routes }}</a>
+          </div>
+        </article>
+
+        <article class="route-map-card">
+          <div class="panel-header">
+            <h2>{{ ui.route_map_title }}</h2>
+            <p>{{ route_plan.selected_regions|join:", " }}</p>
+          </div>
+          <div id="route-map" class="route-map-surface"></div>
+        </article>
+      </div>
+
+      <section class="route-section">
+        <div class="panel-header">
+          <h2>{{ ui.route_stops_title }}</h2>
+          <p>{{ route_plan.stops|length }} stop{{ route_plan.stops|length|pluralize }}</p>
+        </div>
+
+        <div class="route-stop-grid">
+          {% for stop in route_plan.stops %}
+            <article class="route-stop-card">
+              {% if stop.has_image %}
+                <img src="{{ stop.image_url }}" alt="{{ stop.name }}" class="route-stop-image">
+              {% else %}
+                <div class="route-stop-image route-stop-placeholder">
+                  <span>{{ stop.name|slice:":1" }}</span>
+                </div>
+              {% endif %}
+
+              <div class="route-stop-body">
+                <div class="route-stop-head">
+                  <div>
+                    <span class="section-pill">{{ stop.category_label }}</span>
+                    <h3>{{ stop.name }}</h3>
+                  </div>
+                  <span class="route-stop-duration">{{ stop.visit_hours }}h</span>
+                </div>
+
+                <p class="landmark-description">{{ stop.description }}</p>
+
+                <div class="marker-pill-row">
+                  <span class="marker-pill">{{ stop.region_name }}</span>
+                  <span class="marker-pill">{{ stop.accessibility_label }}</span>
+                  <span class="marker-pill">{{ stop.activity_label }}</span>
+                </div>
+
+                <div class="route-reasons">
+                  <h4>{{ ui.route_stop_reasons }}</h4>
+                  <ul class="route-reason-list">
+                    {% for reason in stop.reasons %}
+                      <li>{{ reason }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+
+                <div class="card-actions">
+                  <a href="{{ stop.detail_url }}" class="ghost-link">{{ ui.map_open_details }}</a>
+                </div>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+
+      {% if route_plan.alternatives %}
+        <section class="route-section">
+          <div class="panel-header">
+            <h2>{{ ui.route_alternatives_title }}</h2>
+            <p>{{ route_plan.alternatives|length }} {{ ui.map_list_title|lower }}</p>
+          </div>
+
+          <div class="alternative-grid">
+            {% for stop in route_plan.alternatives %}
+              <article class="alternative-card">
+                <span class="section-pill">{{ stop.category_label }}</span>
+                <h3>{{ stop.name }}</h3>
+                <p>{{ stop.region_name }} · {{ stop.accessibility_label }}</p>
+                <a href="{{ stop.detail_url }}" class="ghost-link">{{ ui.map_open_details }}</a>
+              </article>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+    </div>
+  </section>
+
+  {{ route_map_points|json_script:"route-map-data" }}
+{% endblock %}
+
+{% block extra_scripts %}
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const points = JSON.parse(document.getElementById("route-map-data").textContent);
+      const map = L.map("route-map", { scrollWheelZoom: false, zoomControl: false }).setView([41.3, 74.8], 7);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors",
+      }).addTo(map);
+
+      if (!points.length) {
+        document.getElementById("route-map").innerHTML = "<div class='empty-card'>Map preview is unavailable for this route.</div>";
+        return;
+      }
+
+      const bounds = [];
+      const line = [];
+      points.forEach((point, index) => {
+        bounds.push([point.lat, point.lng]);
+        line.push([point.lat, point.lng]);
+        L.circleMarker([point.lat, point.lng], {
+          radius: 8,
+          color: "#ffffff",
+          weight: 2,
+          fillColor: index === 0 ? "#f59e0b" : "#06b6d4",
+          fillOpacity: 0.95,
+        })
+          .addTo(map)
+          .bindPopup(`<strong>${point.name}</strong>`);
+      });
+
+      L.polyline(line, { color: "#38bdf8", weight: 3, opacity: 0.85 }).addTo(map);
+      map.fitBounds(bounds, { padding: [32, 32], maxZoom: 8 });
+    });
+  </script>
+{% endblock %}
