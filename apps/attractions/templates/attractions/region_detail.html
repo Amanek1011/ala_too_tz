@@ -1,0 +1,131 @@
+{% extends 'attractions/base.html' %}
+
+{% block title %}{{ region.name }} — Достопримечательности{% endblock %}
+
+{% block content %}
+  <div class="min-h-screen bg-background text-foreground font-sans overflow-x-hidden selection:bg-primary/30">
+    <div class="fixed inset-0 z-0 opacity-20 pointer-events-none" style="background: radial-gradient(circle at 50% 0%, {{ region.color }} 0%, transparent 70%)"></div>
+
+    <div class="relative z-10">
+      <!-- Header/Nav -->
+      <div class="p-6 md:p-10 flex items-center justify-between absolute top-0 left-0 w-full z-50">
+        <a href="{% url 'attractions:home' %}" class="text-white hover:bg-white/10 hover:text-white group gap-2 px-4 py-2 rounded-lg transition-colors inline-flex items-center">
+          <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          Back to Map
+        </a>
+      </div>
+
+      <!-- Hero Section -->
+      <div class="min-h-[60vh] flex flex-col items-center justify-center text-center px-4 relative pt-20 pb-10">
+        <div class="max-w-4xl">
+          <h1 class="text-5xl md:text-7xl lg:text-8xl font-black text-white tracking-tight mb-6 drop-shadow-2xl" data-testid="region-title-{{ region.id }}">
+            {{ region.name }}
+          </h1>
+          <p class="text-xl md:text-3xl font-light text-white/80 font-display max-w-2xl mx-auto" style="color: {{ region.color }}">
+            {{ region.tagline }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Content Section -->
+      <div class="max-w-6xl mx-auto px-4 md:px-8 pb-24">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+
+          <!-- Left Column: Description & Highlights -->
+          <div class="lg:col-span-1 space-y-8">
+            <div class="bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden group">
+              <div class="absolute top-0 left-0 w-full h-1" style="background-color: {{ region.color }}"></div>
+              <h3 class="text-lg font-semibold mb-4 text-white/90 uppercase tracking-widest text-xs">About</h3>
+              <p class="text-muted-foreground leading-relaxed text-lg" data-testid="region-desc-{{ region.id }}">
+                {{ region.description }}
+              </p>
+            </div>
+
+            <div class="bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+              <h3 class="text-lg font-semibold mb-6 text-white/90 uppercase tracking-widest text-xs">Quick Facts</h3>
+              <div class="space-y-6">
+                <div class="flex items-center gap-4">
+                  <div class="p-3 rounded-xl bg-white/5 border border-white/10 text-white/70" style="color: {{ region.color }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="text-xs text-muted-foreground uppercase tracking-wider mb-1">Elevation</div>
+                    <div class="font-medium text-white">{{ highlights.elevation }}</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="p-3 rounded-xl bg-white/5 border border-white/10 text-white/70" style="color: {{ region.color }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="text-xs text-muted-foreground uppercase tracking-wider mb-1">Landscape</div>
+                    <div class="font-medium text-white">{{ highlights.type }}</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="p-3 rounded-xl bg-white/5 border border-white/10 text-white/70" style="color: {{ region.color }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="text-xs text-muted-foreground uppercase tracking-wider mb-1">Best Season</div>
+                    <div class="font-medium text-white">{{ highlights.season }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Landmarks -->
+          <div class="lg:col-span-2">
+            <h3 class="text-lg font-semibold mb-6 text-white/90 uppercase tracking-widest text-xs pl-2">Key Landmarks</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {% for landmark in landmarks_with_icons %}
+                <div class="bg-card/30 hover:bg-card/60 transition-colors backdrop-blur-md border border-white/5 hover:border-white/20 rounded-2xl p-6 shadow-xl flex flex-col gap-4 group cursor-pointer">
+                  <div class="p-3 rounded-xl bg-white/5 w-fit border border-white/10 transition-transform group-hover:scale-110 duration-300" style="color: {{ region.color }}">
+                    {% if landmark.icon == 'waves' %}
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                      </svg>
+                    {% elif landmark.icon == 'tree-pine' %}
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                      </svg>
+                    {% elif landmark.icon == 'mountain' %}
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"></path>
+                      </svg>
+                    {% elif landmark.icon == 'landmark' %}
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                      </svg>
+                    {% elif landmark.icon == 'building' %}
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                      </svg>
+                    {% else %}
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      </svg>
+                    {% endif %}
+                  </div>
+                  <h4 class="text-xl font-medium text-white group-hover:text-primary transition-colors">{{ landmark.name }}</h4>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
