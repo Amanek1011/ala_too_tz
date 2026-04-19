@@ -1865,3 +1865,307 @@ input[type="password"].input-field {
     justify-self: start;
   }
 }
+
+.language-menu {
+  position: relative;
+}
+
+.language-summary {
+  list-style: none;
+}
+
+.language-summary::-webkit-details-marker {
+  display: none;
+}
+
+.language-menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  min-width: 12rem;
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.65rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(9, 15, 28, 0.96);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.28);
+}
+
+.language-menu-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.85rem;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid transparent;
+}
+
+.language-menu-link:hover,
+.language-menu-link.active {
+  color: white;
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.hero-map-page {
+  padding: 2rem 0 4rem;
+  background:
+    radial-gradient(circle at top left, rgba(6, 182, 212, 0.14), transparent 26%),
+    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.12), transparent 24%),
+    linear-gradient(180deg, rgba(8, 12, 24, 1), rgba(5, 8, 18, 1));
+}
+
+.hero-map-shell,
+.hero-map-copy,
+.hero-map-card {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.hero-map-title {
+  margin: 0;
+  font-family: var(--app-font-display);
+  font-size: clamp(2.3rem, 5vw, 5rem);
+  line-height: 0.94;
+}
+
+.hero-map-subtitle {
+  margin: 0;
+  max-width: 48rem;
+  color: rgba(255, 255, 255, 0.74);
+  line-height: 1.8;
+}
+
+.hero-map-card {
+  padding: 1.25rem;
+  border-radius: 1.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(17, 25, 40, 0.84), rgba(10, 15, 27, 0.96));
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.22);
+}
+
+.hero-map-stage,
+.static-map-shell,
+.route-static-map-shell {
+  position: relative;
+  border-radius: 1.2rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top left, rgba(6, 182, 212, 0.16), transparent 26%),
+    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.12), transparent 22%),
+    linear-gradient(145deg, rgba(10, 16, 30, 0.98), rgba(4, 8, 18, 1));
+}
+
+.hero-map-svg,
+.static-map-svg,
+.route-static-map-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.region-group,
+.map-pin {
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.region-group:hover,
+.map-pin:hover,
+.map-pin.is-active {
+  transform: translateY(-2px);
+}
+
+.hero-region-label,
+.static-region-label,
+.map-pin-number {
+  fill: rgba(255, 255, 255, 0.86);
+  font-size: 13px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.static-region-label {
+  fill: rgba(255, 255, 255, 0.58);
+  font-size: 12px;
+}
+
+.region-tooltip-card,
+.map-hover-card {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 16px));
+  display: grid;
+  gap: 0.2rem;
+  min-width: 12rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 0.95rem;
+  background: rgba(8, 14, 27, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: white;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.region-tooltip-card.visible,
+.map-hover-card.visible {
+  opacity: 1;
+}
+
+.region-tooltip-card span,
+.region-tooltip-card small,
+.map-hover-card span {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.hero-map-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.hero-stat {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hero-stat span {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hero-stat strong {
+  color: white;
+  font-size: 1.2rem;
+}
+
+.static-route-line {
+  fill: none;
+  stroke: rgba(103, 232, 249, 0.7);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 7 9;
+}
+
+.static-route-line.prominent {
+  stroke: rgba(14, 165, 233, 0.92);
+  stroke-width: 5;
+}
+
+.route-static-map-shell {
+  min-height: 27rem;
+}
+
+.route-static-map-svg {
+  min-height: 27rem;
+}
+
+.ar-scene-card {
+  width: 100%;
+  text-align: left;
+}
+
+.ar-scene-card.active {
+  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.14);
+}
+
+.ar-reticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+.ar-overlay-card {
+  position: absolute;
+  max-width: 16rem;
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.9rem;
+  border-radius: 1rem;
+  background: rgba(8, 14, 27, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(14px);
+  color: white;
+  opacity: 0.62;
+  transform: scale(0.98);
+  transition: opacity 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+}
+
+.ar-overlay-card.active {
+  opacity: 1;
+  transform: scale(1);
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.ar-overlay-card strong {
+  font-size: 0.98rem;
+}
+
+.ar-overlay-card p,
+.demo-scene-panel p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.6;
+}
+
+.demo-scene-panel {
+  align-self: end;
+  justify-self: start;
+  display: grid;
+  gap: 0.7rem;
+  max-width: 24rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  background: rgba(8, 14, 27, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px);
+}
+
+.demo-scene-panel h3 {
+  margin: 0;
+  color: white;
+}
+
+@media (max-width: 780px) {
+  .hero-map-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .route-static-map-shell,
+  .route-static-map-svg {
+    min-height: 20rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .language-menu {
+    width: 100%;
+  }
+
+  .language-menu-panel {
+    left: 0;
+    right: auto;
+    width: 100%;
+  }
+}

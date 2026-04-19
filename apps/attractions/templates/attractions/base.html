@@ -21,16 +21,25 @@
             <a href="{% url 'attractions:interactive_map' %}?lang={{ lang }}" class="nav-link">{{ ui.nav_map }}</a>
             <a href="{% url 'attractions:generate_route' %}?lang={{ lang }}" class="nav-link">{{ ui.nav_routes }}</a>
           </div>
-          <div class="language-selector">
-            {% for language_link in language_links %}
-              <a
-                href="{{ language_link.url }}"
-                class="chip-link {% if language_link.active %}active{% endif %}"
-              >
-                {{ language_link.label }}
-              </a>
-            {% endfor %}
-          </div>
+          <details class="language-menu">
+            <summary class="chip-link language-summary">
+              {% for language_link in language_links %}
+                {% if language_link.active %}
+                  {{ language_link.label }}
+                {% endif %}
+              {% endfor %}
+            </summary>
+            <div class="language-menu-panel">
+              {% for language_link in language_links %}
+                <a
+                  href="{{ language_link.url }}"
+                  class="language-menu-link {% if language_link.active %}active{% endif %}"
+                >
+                  {{ language_link.label }}
+                </a>
+              {% endfor %}
+            </div>
+          </details>
 
           <div class="auth-links">
             {% if user.is_authenticated %}

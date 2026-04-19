@@ -2,15 +2,6 @@
 
 {% block title %}{{ route_plan.title }}{% endblock %}
 
-{% block extra_head %}
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
-{% endblock %}
-
 {% block content %}
   <section class="route-result-page">
     <div class="container route-result-shell">
@@ -45,7 +36,20 @@
             <h2>{{ ui.route_map_title }}</h2>
             <p>{{ route_plan.selected_regions|join:", " }}</p>
           </div>
-          <div id="route-map" class="route-map-surface"></div>
+          <div class="route-static-map-shell">
+            <svg viewBox="140 60 1160 640" class="route-static-map-svg" aria-label="{{ ui.route_map_title }}">
+              {% for region in map_regions %}
+                <path
+                  d="{{ region.path }}"
+                  fill="rgba({{ region.r }}, {{ region.g }}, {{ region.b }}, 0.14)"
+                  stroke="rgba({{ region.r }}, {{ region.g }}, {{ region.b }}, 0.36)"
+                  stroke-width="2"
+                ></path>
+              {% endfor %}
+              <g id="route-line-layer"></g>
+              <g id="route-stop-layer"></g>
+            </svg>
+          </div>
         </article>
       </div>
 
@@ -69,7 +73,7 @@
               <div class="route-stop-body">
                 <div class="route-stop-head">
                   <div>
-                    <span class="section-pill">{{ stop.category_label }}</span>
+                    <span class="section-pill">#{{ forloop.counter }} · {{ stop.category_label }}</span>
                     <h3>{{ stop.name }}</h3>
                   </div>
                   <span class="route-stop-duration">{{ stop.visit_hours }}h</span>
@@ -127,43 +131,30 @@
 {% endblock %}
 
 {% block extra_scripts %}
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const points = JSON.parse(document.getElementById("route-map-data").textContent);
-      const map = L.map("route-map", { scrollWheelZoom: false, zoomControl: false }).setView([41.3, 74.8], 7);
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap contributors",
-      }).addTo(map);
+      const lineLayer = document.getElementById("route-line-layer");
+      const stopLayer = document.getElementById("route-stop-layer");
 
       if (!points.length) {
-        document.getElementById("route-map").innerHTML = "<div class='empty-card'>Map preview is unavailable for this route.</div>";
+        lineLayer.innerHTML = "";
+        stopLayer.innerHTML = "";
         return;
       }
 
-      const bounds = [];
-      const line = [];
-      points.forEach((point, index) => {
-        bounds.push([point.lat, point.lng]);
-        line.push([point.lat, point.lng]);
-        L.circleMarker([point.lat, point.lng], {
-          radius: 8,
-          color: "#ffffff",
-          weight: 2,
-          fillColor: index === 0 ? "#f59e0b" : "#06b6d4",
-          fillOpacity: 0.95,
-        })
-          .addTo(map)
-          .bindPopup(`<strong>${point.name}</strong>`);
-      });
+      const pathData = points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.map_x} ${point.map_y}`).join(" ");
+      lineLayer.innerHTML = `<path d="${pathData}" class="static-route-line prominent"></path>`;
 
-      L.polyline(line, { color: "#38bdf8", weight: 3, opacity: 0.85 }).addTo(map);
-      map.fitBounds(bounds, { padding: [32, 32], maxZoom: 8 });
+      stopLayer.innerHTML = points
+        .map((point, index) => `
+          <g transform="translate(${point.map_x} ${point.map_y})">
+            <circle r="15" fill="${index === 0 ? "#f59e0b" : "#06b6d4"}" opacity="0.95"></circle>
+            <circle r="6" fill="#ffffff"></circle>
+            <text y="-22" text-anchor="middle" class="map-pin-number">${index + 1}</text>
+          </g>
+        `)
+        .join("");
     });
   </script>
 {% endblock %}

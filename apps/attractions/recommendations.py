@@ -218,6 +218,39 @@ def _route_difficulty(selected_items):
     return "hard"
 
 
+def _distance(item_a, item_b):
+    landmark_a = item_a["landmark"]
+    landmark_b = item_b["landmark"]
+    if None in {landmark_a.latitude, landmark_a.longitude, landmark_b.latitude, landmark_b.longitude}:
+        return 10**9
+    lat_delta = landmark_a.latitude - landmark_b.latitude
+    lng_delta = landmark_a.longitude - landmark_b.longitude
+    return (lat_delta * lat_delta) + (lng_delta * lng_delta)
+
+
+def _order_route_stops(selected_items):
+    if len(selected_items) <= 2:
+        return selected_items
+
+    remaining = selected_items[:]
+    start_index = min(
+        range(len(remaining)),
+        key=lambda index: (
+            remaining[index]["landmark"].region,
+            remaining[index]["landmark"].longitude or 0,
+            remaining[index]["landmark"].latitude or 0,
+        ),
+    )
+    ordered = [remaining.pop(start_index)]
+
+    while remaining:
+        last = ordered[-1]
+        next_index = min(range(len(remaining)), key=lambda index: _distance(last, remaining[index]))
+        ordered.append(remaining.pop(next_index))
+
+    return ordered
+
+
 def _difficulty_label(lang, key):
     labels = {
         "ru": {"easy": "лёгкий", "medium": "средний", "hard": "активный"},
@@ -357,6 +390,8 @@ def recommend_route(landmarks, cleaned_data, lang="ru"):
 
     if not selected_items:
         return None
+
+    selected_items = _order_route_stops(selected_items)
 
     selected_region_names = []
     for region_id in chosen_regions:
